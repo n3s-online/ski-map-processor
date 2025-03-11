@@ -25,13 +25,29 @@ def load_image(image_path):
         exit(1)
 
 
+def preprocess_image(image):
+    """Preprocess the image to improve text detection."""
+    # Convert to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    
+    # Apply Otsu's thresholding
+    _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    
+    # Optional: Apply additional preprocessing if needed
+    # Noise removal
+    kernel = np.ones((1, 1), np.uint8)
+    opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
+    
+    return opening
+
+
 def get_text_bounding_boxes(image):
     """Detect text in the image and return bounding boxes."""
-    # Convert to RGB for Tesseract
-    rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    # Preprocess the image
+    processed_image = preprocess_image(image)
     
-    # Get data from Tesseract OCR
-    data = pytesseract.image_to_data(rgb_image, output_type=pytesseract.Output.DICT)
+    # Get data from Tesseract OCR using the processed image
+    data = pytesseract.image_to_data(processed_image, output_type=pytesseract.Output.DICT)
     
     # Extract bounding boxes for text
     boxes = []
