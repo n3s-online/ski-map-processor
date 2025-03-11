@@ -55,15 +55,71 @@ class DrawableImageLabel(QLabel):
         # Force a repaint to show the boxes
         self.update()
     
+    def _get_image_offset(self):
+        """Calculate the offset of the image within the label"""
+        if not self.pixmap():
+            return 0, 0
+            
+        pixmap_width = self.pixmap().width()
+        pixmap_height = self.pixmap().height()
+        label_width = self.width()
+        label_height = self.height()
+        
+        # Calculate the offset (if the image is centered)
+        x_offset = max(0, (label_width - pixmap_width) // 2)
+        y_offset = max(0, (label_height - pixmap_height) // 2)
+        
+        return x_offset, y_offset
+    
+    def screen_to_image_coords(self, screen_point):
+        """Convert screen coordinates to image coordinates"""
+        x_offset, y_offset = self._get_image_offset()
+        
+        # Adjust for the offset
+        image_x = screen_point.x() - x_offset
+        image_y = screen_point.y() - y_offset
+        
+        # Ensure we don't go negative
+        image_x = max(0, image_x)
+        image_y = max(0, image_y)
+        
+        # Convert to original scale
+        orig_x = int(image_x / self.current_scale)
+        orig_y = int(image_y / self.current_scale)
+        
+        return QPoint(orig_x, orig_y)
+    
+    def image_to_screen_coords(self, image_point, image_width, image_height):
+        """Convert image coordinates to screen coordinates"""
+        x_offset, y_offset = self._get_image_offset()
+        
+        # Scale the coordinates
+        screen_x = int(image_point.x() * self.current_scale) + x_offset
+        screen_y = int(image_point.y() * self.current_scale) + y_offset
+        screen_width = int(image_width * self.current_scale)
+        screen_height = int(image_height * self.current_scale)
+        
+        return QRect(screen_x, screen_y, screen_width, screen_height)
+    
     def _update_scaled_boxes(self):
         """Update the boxes based on the current scale"""
         self.boxes = []
+        
+        if not self.pixmap():
+            return
+            
+        x_offset, y_offset = self._get_image_offset()
+        
         for x, y, width, height in self.original_boxes:
             # Apply current scale to box coordinates
             scaled_x = int(x * self.current_scale)
             scaled_y = int(y * self.current_scale)
             scaled_width = int(width * self.current_scale)
             scaled_height = int(height * self.current_scale)
+            
+            # Add the offset to position correctly within the label
+            scaled_x += x_offset
+            scaled_y += y_offset
             
             # Create a QRect with the scaled dimensions
             rect = QRect(scaled_x, scaled_y, scaled_width, scaled_height)
@@ -114,14 +170,24 @@ class DrawableImageLabel(QLabel):
             
             # Only add if it has a reasonable size
             if rect.width() > 5 and rect.height() > 5:
+                # Add to scaled boxes for display
                 self.boxes.append(rect)
                 
-                # Convert to original scale and store
-                orig_x = int(rect.x() / self.current_scale)
-                orig_y = int(rect.y() / self.current_scale)
-                orig_width = int(rect.width() / self.current_scale)
-                orig_height = int(rect.height() / self.current_scale)
-                self.original_boxes.append((orig_x, orig_y, orig_width, orig_height))
+                # Convert screen coordinates to image coordinates
+                start_image_point = self.screen_to_image_coords(rect.topLeft())
+                end_image_point = self.screen_to_image_coords(rect.bottomRight())
+                
+                # Calculate width and height in image coordinates
+                orig_width = end_image_point.x() - start_image_point.x()
+                orig_height = end_image_point.y() - start_image_point.y()
+                
+                # Store the original coordinates
+                self.original_boxes.append((
+                    start_image_point.x(),
+                    start_image_point.y(),
+                    orig_width,
+                    orig_height
+                ))
             
             self.update()
         super().mouseReleaseEvent(event)
@@ -626,7 +692,14 @@ class SkiMapProcessor(QMainWindow):
             self.image_label.current_scale = self.current_zoom
             
             # Resize the container to match the image size for proper scrolling
-            self.image_label.setMinimumSize(display_pixmap.width(), display_pixmap.height())
+            # Make sure the image label is at least as big as the pixmap
+            pixmap_width = display_pixmap.width()
+            pixmap_height = display_pixmap.height()
+            self.image_label.setMinimumSize(pixmap_width, pixmap_height)
+            
+            # Force a layout update to ensure proper positioning
+            self.image_container_layout.update()
+            self.image_scroll.update()
             
             # Update status bar with image info if we have the original image
             if hasattr(self, 'original_pixmap'):
@@ -772,7 +845,10 @@ class SkiMapProcessor(QMainWindow):
         if self.current_zoom <= 0.2:
             return
             
+        # Calculate new zoom level
         self.current_zoom = max(0.1, self.current_zoom - self.zoom_step)
+        
+        # Scale the pixmap
         scaled_pixmap = self.original_pixmap.scaled(
             int(self.original_width * self.current_zoom),
             int(self.original_height * self.current_zoom),
@@ -793,9 +869,10 @@ class SkiMapProcessor(QMainWindow):
         if not hasattr(self, 'original_pixmap') or self.original_pixmap.isNull():
             return
             
+        # Set zoom to 100%
         self.current_zoom = 1.0
         
-        # Update the display
+        # Update the display with the original pixmap
         self.display_image(pixmap=self.original_pixmap)
         
         # Update the boxes with the new scale
@@ -812,7 +889,10 @@ class SkiMapProcessor(QMainWindow):
         if self.current_zoom >= 5.0:
             return
             
+        # Calculate new zoom level
         self.current_zoom = min(5.0, self.current_zoom + self.zoom_step)
+        
+        # Scale the pixmap
         scaled_pixmap = self.original_pixmap.scaled(
             int(self.original_width * self.current_zoom),
             int(self.original_height * self.current_zoom),
