@@ -7,6 +7,9 @@ Processing ski maps for my upcoming project Ski-o-guessr.
 - Collect metadata about ski resorts given the trail map
 - Generate a copy of the trail map with text covered
 - PyQt5-based GUI for easy metadata editing
+- Smart dropdowns that learn from existing metadata entries
+- Country-dependent region selection
+- "Other" option in dropdowns for custom values
 
 ## Setup and Usage
 
@@ -28,6 +31,13 @@ Processing ski maps for my upcoming project Ski-o-guessr.
 
 4. Use the interface to:
    - View ski maps
-   - Edit metadata (name, country, region, parent company)
+   - Edit metadata using the form
    - Save metadata
    - Navigate between different ski maps
+   
+5. Form functionality:
+   - Resort Name: Simple text input
+   - Country: Dropdown with "Other" option for custom values
+   - State/Region: Dropdown that shows regions specific to the selected country
+   - Parent Company: Dropdown with "Other" option for custom values
+   - New values are automatically added to the dropdowns after saving

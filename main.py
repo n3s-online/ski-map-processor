@@ -3,7 +3,7 @@ import json
 import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                             QHBoxLayout, QLabel, QLineEdit, QPushButton, 
-                            QFrame, QScrollArea)
+                            QFrame, QScrollArea, QComboBox)
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import Qt
 from PIL import Image
@@ -20,6 +20,12 @@ class SkiMapProcessor(QMainWindow):
         self.files_dir = files_dir
         self.folders = self.get_folders()
         self.current_folder_index = 0
+        
+        # Collect unique metadata values from existing files
+        self.unique_values = self.collect_unique_metadata_values()
+        
+        # Create a mapping of country to regions
+        self.country_to_regions = self.create_country_region_mapping()
         
         # Main widget and layout
         main_widget = QWidget()
@@ -44,24 +50,42 @@ class SkiMapProcessor(QMainWindow):
         form_title.setStyleSheet("font-size: 18px; font-weight: bold;")
         form_layout.addWidget(form_title)
         
-        # Resort name
+        # Resort name (text input only)
         form_layout.addWidget(QLabel("Resort Name:"))
         self.name_input = QLineEdit()
         form_layout.addWidget(self.name_input)
         
         # Country
         form_layout.addWidget(QLabel("Country:"))
+        self.country_combo = QComboBox()
+        self.country_combo.setEditable(True)
+        self.country_combo.addItems([""] + self.unique_values.get("country", []) + ["Other"])
+        self.country_combo.currentTextChanged.connect(self.on_country_changed)
+        form_layout.addWidget(self.country_combo)
         self.country_input = QLineEdit()
+        self.country_input.setVisible(False)
         form_layout.addWidget(self.country_input)
         
         # State/Region
         form_layout.addWidget(QLabel("State/Region:"))
+        self.region_combo = QComboBox()
+        self.region_combo.setEditable(True)
+        self.region_combo.setEnabled(False)  # Disabled until country is selected
+        self.region_combo.currentTextChanged.connect(self.on_region_changed)
+        form_layout.addWidget(self.region_combo)
         self.region_input = QLineEdit()
+        self.region_input.setVisible(False)
         form_layout.addWidget(self.region_input)
         
         # Parent Company
         form_layout.addWidget(QLabel("Parent Company:"))
+        self.company_combo = QComboBox()
+        self.company_combo.setEditable(True)
+        self.company_combo.addItems([""] + self.unique_values.get("parent_company", []) + ["Other"])
+        self.company_combo.currentTextChanged.connect(self.on_company_changed)
+        form_layout.addWidget(self.company_combo)
         self.company_input = QLineEdit()
+        self.company_input.setVisible(False)
         form_layout.addWidget(self.company_input)
         
         # Add some spacing
@@ -99,11 +123,100 @@ class SkiMapProcessor(QMainWindow):
             # Load the first folder
             self.load_current_folder()
     
+    def collect_unique_metadata_values(self):
+        """Collect unique values for each metadata field from all metadata.json files"""
+        unique_values = {
+            "name": set(),
+            "country": set(),
+            "region": set(),
+            "parent_company": set()
+        }
+        
+        for folder in self.folders:
+            metadata_path = os.path.join(self.files_dir, folder, "metadata.json")
+            if os.path.exists(metadata_path):
+                try:
+                    with open(metadata_path, 'r') as f:
+                        metadata = json.load(f)
+                    
+                    # Add non-empty values to sets
+                    if metadata.get("name"):
+                        unique_values["name"].add(metadata["name"])
+                    if metadata.get("country"):
+                        unique_values["country"].add(metadata["country"])
+                    if metadata.get("region"):
+                        unique_values["region"].add(metadata["region"])
+                    if metadata.get("parent_company"):
+                        unique_values["parent_company"].add(metadata["parent_company"])
+                except Exception as e:
+                    print(f"Error reading metadata from {metadata_path}: {e}")
+        
+        # Convert sets to sorted lists
+        return {k: sorted(list(v)) for k, v in unique_values.items()}
+    
+    def create_country_region_mapping(self):
+        """Create a mapping of countries to their regions"""
+        country_to_regions = {}
+        
+        for folder in self.folders:
+            metadata_path = os.path.join(self.files_dir, folder, "metadata.json")
+            if os.path.exists(metadata_path):
+                try:
+                    with open(metadata_path, 'r') as f:
+                        metadata = json.load(f)
+                    
+                    country = metadata.get("country")
+                    region = metadata.get("region")
+                    
+                    if country and region:
+                        if country not in country_to_regions:
+                            country_to_regions[country] = set()
+                        country_to_regions[country].add(region)
+                except Exception as e:
+                    print(f"Error reading metadata from {metadata_path}: {e}")
+        
+        # Convert sets to sorted lists
+        return {k: sorted(list(v)) for k, v in country_to_regions.items()}
+    
+    def on_country_changed(self, text):
+        """Handle country dropdown change"""
+        if text == "Other":
+            self.country_input.setVisible(True)
+            self.country_input.setFocus()
+            # Disable region dropdown when "Other" is selected for country
+            self.region_combo.setEnabled(False)
+            self.region_combo.clear()
+        else:
+            self.country_input.setVisible(False)
+            
+            # Update region dropdown based on selected country
+            self.region_combo.clear()
+            if text in self.country_to_regions:
+                self.region_combo.setEnabled(True)
+                self.region_combo.addItems([""] + self.country_to_regions[text] + ["Other"])
+            else:
+                self.region_combo.setEnabled(False)
+    
+    def on_region_changed(self, text):
+        """Handle region dropdown change"""
+        self.region_input.setVisible(text == "Other")
+        if text == "Other":
+            self.region_input.setFocus()
+    
+    def on_company_changed(self, text):
+        """Handle company dropdown change"""
+        self.company_input.setVisible(text == "Other")
+        if text == "Other":
+            self.company_input.setFocus()
+    
     def disable_controls(self):
         """Disable all controls when no folders are found"""
         self.name_input.setEnabled(False)
+        self.country_combo.setEnabled(False)
         self.country_input.setEnabled(False)
+        self.region_combo.setEnabled(False)
         self.region_input.setEnabled(False)
+        self.company_combo.setEnabled(False)
         self.company_input.setEnabled(False)
         self.save_button.setEnabled(False)
         self.prev_button.setEnabled(False)
@@ -141,16 +254,54 @@ class SkiMapProcessor(QMainWindow):
             with open(metadata_path, 'r') as f:
                 metadata = json.load(f)
             
+            # Set form values
             self.name_input.setText(metadata.get("name", ""))
-            self.country_input.setText(metadata.get("country", ""))
-            self.region_input.setText(metadata.get("region", ""))
-            self.company_input.setText(metadata.get("parent_company", ""))
+            
+            # Set country
+            country = metadata.get("country", "")
+            if country in self.unique_values["country"]:
+                self.country_combo.setCurrentText(country)
+                self.country_input.setVisible(False)
+            else:
+                self.country_combo.setCurrentText("Other")
+                self.country_input.setText(country)
+                self.country_input.setVisible(True)
+            
+            # Set region (will be updated by country change handler)
+            region = metadata.get("region", "")
+            if country in self.country_to_regions and region in self.country_to_regions[country]:
+                self.region_combo.setCurrentText(region)
+                self.region_input.setVisible(False)
+            else:
+                self.region_combo.setCurrentText("Other")
+                self.region_input.setText(region)
+                self.region_input.setVisible(True)
+            
+            # Set company
+            company = metadata.get("parent_company", "")
+            if company in self.unique_values["parent_company"]:
+                self.company_combo.setCurrentText(company)
+                self.company_input.setVisible(False)
+            else:
+                self.company_combo.setCurrentText("Other")
+                self.company_input.setText(company)
+                self.company_input.setVisible(True)
         else:
             # Clear form if no metadata exists
             self.name_input.setText("")
+            
+            self.country_combo.setCurrentText("")
             self.country_input.setText("")
+            self.country_input.setVisible(False)
+            
+            self.region_combo.clear()
+            self.region_combo.setEnabled(False)
             self.region_input.setText("")
+            self.region_input.setVisible(False)
+            
+            self.company_combo.setCurrentText("")
             self.company_input.setText("")
+            self.company_input.setVisible(False)
     
     def display_image(self, image_path):
         """Display the image in the GUI"""
@@ -180,17 +331,50 @@ class SkiMapProcessor(QMainWindow):
         folder_path = os.path.join(self.files_dir, current_folder)
         metadata_path = os.path.join(folder_path, "metadata.json")
         
+        # Get values from form
+        name = self.name_input.text()
+        country = self.country_input.text() if self.country_combo.currentText() == "Other" else self.country_combo.currentText()
+        region = self.region_input.text() if self.region_combo.currentText() == "Other" else self.region_combo.currentText()
+        company = self.company_input.text() if self.company_combo.currentText() == "Other" else self.company_combo.currentText()
+        
         metadata = {
-            "name": self.name_input.text(),
-            "country": self.country_input.text(),
-            "region": self.region_input.text(),
-            "parent_company": self.company_input.text()
+            "name": name,
+            "country": country,
+            "region": region,
+            "parent_company": company
         }
         
         with open(metadata_path, 'w') as f:
             json.dump(metadata, f, indent=4)
         
         print(f"Metadata saved for {current_folder}")
+        
+        # Update unique values with new entries
+        if country and country not in self.unique_values["country"] and country != "Other":
+            self.unique_values["country"].append(country)
+            self.unique_values["country"].sort()
+            self.update_combo_items(self.country_combo, self.unique_values["country"])
+        
+        # Update country-to-region mapping
+        if country and region and region != "Other":
+            if country not in self.country_to_regions:
+                self.country_to_regions[country] = []
+            
+            if region not in self.country_to_regions[country]:
+                self.country_to_regions[country].append(region)
+                self.country_to_regions[country].sort()
+        
+        if company and company not in self.unique_values["parent_company"] and company != "Other":
+            self.unique_values["parent_company"].append(company)
+            self.unique_values["parent_company"].sort()
+            self.update_combo_items(self.company_combo, self.unique_values["parent_company"])
+    
+    def update_combo_items(self, combo, items):
+        """Update combo box items while preserving current selection"""
+        current_text = combo.currentText()
+        combo.clear()
+        combo.addItems([""] + items + ["Other"])
+        combo.setCurrentText(current_text)
     
     def next_folder(self):
         """Move to the next folder"""
