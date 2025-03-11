@@ -3,8 +3,8 @@ import json
 import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                             QHBoxLayout, QLabel, QLineEdit, QPushButton, 
-                            QFrame, QScrollArea, QComboBox)
-from PyQt5.QtGui import QPixmap, QImage
+                            QFrame, QScrollArea, QComboBox, QSizePolicy, QShortcut)
+from PyQt5.QtGui import QPixmap, QImage, QKeySequence
 from PyQt5.QtCore import Qt
 from PIL import Image
 import shutil
@@ -21,6 +21,10 @@ class SkiMapProcessor(QMainWindow):
         self.folders = self.get_folders()
         self.current_folder_index = 0
         
+        # Image display variables
+        self.current_zoom = 1.0  # Current zoom level
+        self.zoom_step = 0.1     # Zoom step size
+        
         # Collect unique metadata values from existing files
         self.unique_values = self.collect_unique_metadata_values()
         
@@ -35,10 +39,65 @@ class SkiMapProcessor(QMainWindow):
         # Left side - Image display
         self.image_scroll = QScrollArea()
         self.image_scroll.setWidgetResizable(True)
+        self.image_scroll.setAlignment(Qt.AlignCenter)
+        self.image_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.image_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        
+        # Create a container for the image area with controls
+        image_area = QWidget()
+        image_area_layout = QVBoxLayout(image_area)
+        
+        # Zoom controls
+        zoom_controls = QHBoxLayout()
+        
+        self.zoom_out_btn = QPushButton("-")
+        self.zoom_out_btn.setFixedSize(30, 30)
+        self.zoom_out_btn.clicked.connect(self.zoom_out)
+        zoom_controls.addWidget(self.zoom_out_btn)
+        
+        self.zoom_reset_btn = QPushButton("100%")
+        self.zoom_reset_btn.clicked.connect(self.zoom_reset)
+        zoom_controls.addWidget(self.zoom_reset_btn)
+        
+        self.zoom_in_btn = QPushButton("+")
+        self.zoom_in_btn.setFixedSize(30, 30)
+        self.zoom_in_btn.clicked.connect(self.zoom_in)
+        zoom_controls.addWidget(self.zoom_in_btn)
+        
+        zoom_controls.addStretch()
+        
+        image_area_layout.addLayout(zoom_controls)
+        
+        # Create a container widget for the image label to allow proper scrolling
+        self.image_container = QWidget()
+        self.image_container_layout = QVBoxLayout(self.image_container)
+        
         self.image_label = QLabel()
         self.image_label.setAlignment(Qt.AlignCenter)
-        self.image_scroll.setWidget(self.image_label)
-        main_layout.addWidget(self.image_scroll, 3)  # 3:1 ratio
+        self.image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.image_label.setMinimumSize(800, 600)  # Set minimum size to prevent tiny images
+        
+        # Enable mouse tracking for wheel events
+        self.image_scroll.setMouseTracking(True)
+        self.image_scroll.wheelEvent = self.wheel_event
+        
+        # Add keyboard shortcuts
+        self.zoom_in_shortcut = QShortcut(QKeySequence("Ctrl++"), self)
+        self.zoom_in_shortcut.activated.connect(self.zoom_in)
+        
+        self.zoom_out_shortcut = QShortcut(QKeySequence("Ctrl+-"), self)
+        self.zoom_out_shortcut.activated.connect(self.zoom_out)
+        
+        self.zoom_reset_shortcut = QShortcut(QKeySequence("Ctrl+0"), self)
+        self.zoom_reset_shortcut.activated.connect(self.zoom_reset)
+        
+        self.image_container_layout.addWidget(self.image_label)
+        self.image_container_layout.addStretch()
+        
+        self.image_scroll.setWidget(self.image_container)
+        image_area_layout.addWidget(self.image_scroll)
+        
+        main_layout.addWidget(image_area, 3)  # 3:1 ratio
         
         # Right side - Form
         form_widget = QWidget()
@@ -244,9 +303,18 @@ class SkiMapProcessor(QMainWindow):
         # Load image
         image_path = os.path.join(folder_path, "ski_map_original.png")
         if os.path.exists(image_path):
+            # Reset zoom level when loading a new image
+            self.current_zoom = 1.0
+            self.zoom_reset_btn.setText("100%")
+            
+            # Display the image with high quality
             self.display_image(image_path)
+            
+            # Update status with folder info
+            self.statusBar().showMessage(f"Loaded folder: {current_folder} | Image: ski_map_original.png")
         else:
             self.image_label.setText(f"Image not found: {image_path}")
+            self.statusBar().showMessage(f"Error: Image not found in {current_folder}")
         
         # Load metadata
         metadata_path = os.path.join(folder_path, "metadata.json")
@@ -303,24 +371,58 @@ class SkiMapProcessor(QMainWindow):
             self.company_input.setText("")
             self.company_input.setVisible(False)
     
-    def display_image(self, image_path):
-        """Display the image in the GUI"""
+    def display_image(self, image_path=None, pixmap=None):
+        """Display the image in the GUI with high quality"""
         try:
-            # Open the image with PIL to get dimensions
-            pil_img = Image.open(image_path)
-            img_width, img_height = pil_img.size
+            if image_path:
+                # Open the image with PIL to get dimensions
+                pil_img = Image.open(image_path)
+                img_width, img_height = pil_img.size
+                
+                # Store original image for potential high-quality display
+                self.original_pixmap = QPixmap(image_path)
+                self.current_image_path = image_path
+                self.current_zoom = 1.0  # Reset zoom when loading a new image
+                
+                # Get the available size for the image
+                viewport_width = self.image_scroll.viewport().width()
+                viewport_height = self.image_scroll.viewport().height()
+                
+                # Determine if we need to scale down (never scale up small images)
+                if img_width > viewport_width or img_height > viewport_height:
+                    # Scale down to fit viewport while maintaining aspect ratio
+                    display_pixmap = self.original_pixmap.scaled(
+                        viewport_width, 
+                        viewport_height,
+                        Qt.KeepAspectRatio,  # Maintain aspect ratio
+                        Qt.SmoothTransformation  # High-quality scaling
+                    )
+                else:
+                    # Use original size for small images
+                    display_pixmap = self.original_pixmap
+            elif pixmap:
+                # Use the provided pixmap (for zoom operations)
+                display_pixmap = pixmap
+                # Update zoom indicator
+                self.zoom_reset_btn.setText(f"{int(self.current_zoom * 100)}%")
+            else:
+                return
             
-            # Convert to QPixmap for display
-            pixmap = QPixmap(image_path)
+            # Set the pixmap to the label
+            self.image_label.setPixmap(display_pixmap)
             
-            # Scale if needed
-            if pixmap.width() > 800 or pixmap.height() > 600:
-                pixmap = pixmap.scaled(800, 600, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            # Resize the container to match the image size for proper scrolling
+            self.image_label.setMinimumSize(display_pixmap.width(), display_pixmap.height())
             
-            self.image_label.setPixmap(pixmap)
+            # Update status bar with image info if we have the original image
+            if hasattr(self, 'original_pixmap'):
+                orig_width = self.original_pixmap.width()
+                orig_height = self.original_pixmap.height()
+                self.statusBar().showMessage(f"Image dimensions: {orig_width}x{orig_height} pixels | Zoom: {int(self.current_zoom * 100)}%")
             
         except Exception as e:
             self.image_label.setText(f"Error displaying image: {e}")
+            self.statusBar().showMessage(f"Error: {e}")
     
     def save_metadata(self):
         """Save the metadata to a JSON file"""
@@ -391,6 +493,65 @@ class SkiMapProcessor(QMainWindow):
         
         self.current_folder_index = (self.current_folder_index - 1) % len(self.folders)
         self.load_current_folder()
+
+    def zoom_out(self):
+        """Zoom out the image"""
+        if not hasattr(self, 'original_pixmap') or self.original_pixmap.isNull():
+            return
+            
+        # Don't zoom out too far
+        if self.current_zoom <= 0.2:
+            return
+            
+        self.current_zoom = max(0.1, self.current_zoom - self.zoom_step)
+        scaled_pixmap = self.original_pixmap.scaled(
+            int(self.original_pixmap.width() * self.current_zoom),
+            int(self.original_pixmap.height() * self.current_zoom),
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation
+        )
+        self.display_image(pixmap=scaled_pixmap)
+    
+    def zoom_reset(self):
+        """Reset the image to original size"""
+        if not hasattr(self, 'original_pixmap') or self.original_pixmap.isNull():
+            return
+            
+        self.current_zoom = 1.0
+        self.display_image(pixmap=self.original_pixmap)
+    
+    def zoom_in(self):
+        """Zoom in the image"""
+        if not hasattr(self, 'original_pixmap') or self.original_pixmap.isNull():
+            return
+            
+        # Don't zoom in too far
+        if self.current_zoom >= 5.0:
+            return
+            
+        self.current_zoom = min(5.0, self.current_zoom + self.zoom_step)
+        scaled_pixmap = self.original_pixmap.scaled(
+            int(self.original_pixmap.width() * self.current_zoom),
+            int(self.original_pixmap.height() * self.current_zoom),
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation
+        )
+        self.display_image(pixmap=scaled_pixmap)
+
+    def wheel_event(self, event):
+        """Handle wheel events for zooming"""
+        # Check if Ctrl key is pressed for zooming
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
+            # Zoom with Ctrl+wheel
+            if event.angleDelta().y() > 0:
+                self.zoom_in()
+            elif event.angleDelta().y() < 0:
+                self.zoom_out()
+            event.accept()
+        else:
+            # Normal scrolling behavior
+            QScrollArea.wheelEvent(self.image_scroll, event)
 
 def main():
     app = QApplication(sys.argv)
