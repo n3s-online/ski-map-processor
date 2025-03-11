@@ -2,5 +2,31 @@
     "name": "Snoqualmie (Central)",
     "country": "USA",
     "region": "Washington",
-    "parent_company": "Alterra"
+    "parent_company": "Alterra",
+    "boxes": [
+        [
+            327,
+            23,
+            171,
+            64
+        ],
+        [
+            9,
+            539,
+            38,
+            38
+        ],
+        [
+            915,
+            493,
+            44,
+            44
+        ],
+        [
+            849,
+            419,
+            127,
+            21
+        ]
+    ]
 }

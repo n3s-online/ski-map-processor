@@ -2,5 +2,25 @@
     "name": "Powderhorn",
     "country": "USA",
     "region": "Colorado",
-    "parent_company": "Independent"
+    "parent_company": "Independent",
+    "boxes": [
+        [
+            65,
+            82,
+            464,
+            135
+        ],
+        [
+            1030,
+            162,
+            114,
+            78
+        ],
+        [
+            855,
+            1094,
+            312,
+            80
+        ]
+    ]
 }

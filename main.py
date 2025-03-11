@@ -3,12 +3,150 @@ import json
 import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                             QHBoxLayout, QLabel, QLineEdit, QPushButton, 
-                            QFrame, QScrollArea, QComboBox, QSizePolicy, QShortcut)
-from PyQt5.QtGui import QPixmap, QImage, QKeySequence
-from PyQt5.QtCore import Qt
-from PIL import Image
+                            QFrame, QScrollArea, QComboBox, QSizePolicy, QShortcut,
+                            QCheckBox, QColorDialog, QMessageBox)
+from PyQt5.QtGui import QPixmap, QImage, QKeySequence, QPainter, QColor, QPen, QBrush
+from PyQt5.QtCore import Qt, QRect, QPoint
+from PIL import Image, ImageDraw
 import shutil
 from pathlib import Path
+
+class DrawableImageLabel(QLabel):
+    """Custom QLabel that allows drawing rectangles on the image"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setMouseTracking(True)
+        
+        # Drawing state
+        self.drawing_enabled = False
+        self.drawing = False
+        self.start_point = QPoint()
+        self.end_point = QPoint()
+        self.boxes = []  # List of QRect objects
+        self.boxes_visible = True  # Whether to display the boxes
+        self.current_scale = 1.0  # Current display scale
+        self.original_boxes = []  # Original box coordinates at 100% scale
+        
+        # Appearance
+        self.box_color = QColor(255, 0, 0, 128)  # Semi-transparent red
+        
+    def enable_drawing(self, enabled):
+        """Enable or disable drawing mode"""
+        self.drawing_enabled = enabled
+        self.setCursor(Qt.CrossCursor if enabled else Qt.ArrowCursor)
+    
+    def set_boxes(self, boxes):
+        """Set the list of boxes from metadata"""
+        # Clear existing boxes
+        self.boxes = []
+        self.original_boxes = []
+        
+        # Add each box, ensuring they are valid QRect objects
+        for box_data in boxes:
+            if len(box_data) == 4:  # Ensure we have [x, y, width, height]
+                x, y, width, height = box_data
+                # Store original box coordinates (at 100% scale)
+                self.original_boxes.append((int(x), int(y), int(width), int(height)))
+        
+        # Apply current scale to boxes
+        self._update_scaled_boxes()
+        
+        # Force a repaint to show the boxes
+        self.update()
+    
+    def _update_scaled_boxes(self):
+        """Update the boxes based on the current scale"""
+        self.boxes = []
+        for x, y, width, height in self.original_boxes:
+            # Apply current scale to box coordinates
+            scaled_x = int(x * self.current_scale)
+            scaled_y = int(y * self.current_scale)
+            scaled_width = int(width * self.current_scale)
+            scaled_height = int(height * self.current_scale)
+            
+            # Create a QRect with the scaled dimensions
+            rect = QRect(scaled_x, scaled_y, scaled_width, scaled_height)
+            # Only add if it has a reasonable size
+            if rect.width() > 0 and rect.height() > 0:
+                self.boxes.append(rect)
+    
+    def get_boxes(self):
+        """Get the list of boxes as serializable data (at original scale)"""
+        # Return the original box coordinates, not the scaled ones
+        return self.original_boxes
+    
+    def clear_boxes(self):
+        """Clear all boxes"""
+        self.boxes = []
+        self.original_boxes = []
+        self.update()
+    
+    def remove_last_box(self):
+        """Remove the last drawn box"""
+        if self.boxes and self.original_boxes:
+            self.boxes.pop()
+            self.original_boxes.pop()
+            self.update()
+    
+    def mousePressEvent(self, event):
+        """Handle mouse press events for drawing"""
+        if self.drawing_enabled and event.button() == Qt.LeftButton:
+            self.drawing = True
+            self.start_point = event.pos()
+            self.end_point = event.pos()
+            self.update()
+        super().mousePressEvent(event)
+    
+    def mouseMoveEvent(self, event):
+        """Handle mouse move events for drawing"""
+        if self.drawing_enabled and self.drawing:
+            self.end_point = event.pos()
+            self.update()
+        super().mouseMoveEvent(event)
+    
+    def mouseReleaseEvent(self, event):
+        """Handle mouse release events for drawing"""
+        if self.drawing_enabled and self.drawing and event.button() == Qt.LeftButton:
+            self.drawing = False
+            # Create a normalized rectangle (ensure width and height are positive)
+            rect = QRect(self.start_point, self.end_point).normalized()
+            
+            # Only add if it has a reasonable size
+            if rect.width() > 5 and rect.height() > 5:
+                self.boxes.append(rect)
+                
+                # Convert to original scale and store
+                orig_x = int(rect.x() / self.current_scale)
+                orig_y = int(rect.y() / self.current_scale)
+                orig_width = int(rect.width() / self.current_scale)
+                orig_height = int(rect.height() / self.current_scale)
+                self.original_boxes.append((orig_x, orig_y, orig_width, orig_height))
+            
+            self.update()
+        super().mouseReleaseEvent(event)
+    
+    def paintEvent(self, event):
+        """Paint the image and the rectangles"""
+        super().paintEvent(event)
+        
+        if self.pixmap() and self.boxes_visible:
+            painter = QPainter(self)
+            
+            # Draw existing boxes
+            for rect in self.boxes:
+                painter.setPen(QPen(self.box_color, 2))
+                painter.setBrush(QBrush(self.box_color))
+                painter.drawRect(rect)
+            
+            # Draw the rectangle being created
+            if self.drawing_enabled and self.drawing:
+                painter.setPen(QPen(self.box_color, 2))
+                painter.setBrush(QBrush(self.box_color))
+                rect = QRect(self.start_point, self.end_point).normalized()
+                painter.drawRect(rect)
+            
+            painter.end()
 
 class SkiMapProcessor(QMainWindow):
     def __init__(self, files_dir="files"):
@@ -66,13 +204,32 @@ class SkiMapProcessor(QMainWindow):
         
         zoom_controls.addStretch()
         
+        # Drawing controls
+        self.draw_mode_checkbox = QCheckBox("Draw Mode")
+        self.draw_mode_checkbox.toggled.connect(self.toggle_draw_mode)
+        zoom_controls.addWidget(self.draw_mode_checkbox)
+        
+        self.undo_box_btn = QPushButton("Undo Box")
+        self.undo_box_btn.clicked.connect(self.remove_last_box)
+        zoom_controls.addWidget(self.undo_box_btn)
+        
+        self.clear_boxes_btn = QPushButton("Clear Boxes")
+        self.clear_boxes_btn.clicked.connect(self.clear_boxes)
+        zoom_controls.addWidget(self.clear_boxes_btn)
+        
+        # View toggle
+        self.view_toggle_btn = QPushButton("View Redacted")
+        self.view_toggle_btn.setCheckable(True)
+        self.view_toggle_btn.clicked.connect(self.toggle_view)
+        zoom_controls.addWidget(self.view_toggle_btn)
+        
         image_area_layout.addLayout(zoom_controls)
         
         # Create a container widget for the image label to allow proper scrolling
         self.image_container = QWidget()
         self.image_container_layout = QVBoxLayout(self.image_container)
         
-        self.image_label = QLabel()
+        self.image_label = DrawableImageLabel()
         self.image_label.setAlignment(Qt.AlignCenter)
         self.image_label.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.image_label.setMinimumSize(800, 600)  # Set minimum size to prevent tiny images
@@ -300,23 +457,19 @@ class SkiMapProcessor(QMainWindow):
         # Update folder label
         self.folder_label.setText(f"Folder: {current_folder} ({self.current_folder_index + 1}/{len(self.folders)})")
         
-        # Load image
-        image_path = os.path.join(folder_path, "ski_map_original.png")
-        if os.path.exists(image_path):
-            # Reset zoom level when loading a new image
-            self.current_zoom = 1.0
-            self.zoom_reset_btn.setText("100%")
-            
-            # Display the image with high quality
-            self.display_image(image_path)
-            
-            # Update status with folder info
-            self.statusBar().showMessage(f"Loaded folder: {current_folder} | Image: ski_map_original.png")
-        else:
-            self.image_label.setText(f"Image not found: {image_path}")
-            self.statusBar().showMessage(f"Error: Image not found in {current_folder}")
+        # Clear any existing boxes
+        self.image_label.clear_boxes()
         
-        # Load metadata
+        # Reset view toggle
+        self.view_toggle_btn.setChecked(False)
+        self.view_toggle_btn.setText("View Redacted")
+        
+        # Store paths for later use
+        self.current_folder_path = folder_path
+        self.original_image_path = os.path.join(folder_path, "ski_map_original.png")
+        self.redacted_image_path = os.path.join(folder_path, "ski_map_redacted.png")
+        
+        # Load metadata first to get boxes
         metadata_path = os.path.join(folder_path, "metadata.json")
         if os.path.exists(metadata_path):
             with open(metadata_path, 'r') as f:
@@ -354,22 +507,53 @@ class SkiMapProcessor(QMainWindow):
                 self.company_combo.setCurrentText("Other")
                 self.company_input.setText(company)
                 self.company_input.setVisible(True)
+                
+            # Load redaction boxes if they exist
+            if "boxes" in metadata and isinstance(metadata["boxes"], list):
+                # Store boxes for later use
+                self.current_boxes = metadata["boxes"]
+            else:
+                self.current_boxes = []
         else:
-            # Clear form if no metadata exists
+            # Clear form
             self.name_input.setText("")
-            
             self.country_combo.setCurrentText("")
             self.country_input.setText("")
             self.country_input.setVisible(False)
-            
-            self.region_combo.clear()
-            self.region_combo.setEnabled(False)
+            self.region_combo.setCurrentText("")
             self.region_input.setText("")
             self.region_input.setVisible(False)
-            
             self.company_combo.setCurrentText("")
             self.company_input.setText("")
             self.company_input.setVisible(False)
+            self.current_boxes = []
+        
+        # Now load the image
+        if os.path.exists(self.original_image_path):
+            # Reset zoom level when loading a new image
+            self.current_zoom = 1.0
+            self.zoom_reset_btn.setText("100%")
+            
+            # Display the image with high quality
+            self.display_image(image_path=self.original_image_path)
+            
+            # After image is loaded, set the boxes with the current scale
+            if hasattr(self, 'current_boxes') and self.current_boxes:
+                self.image_label.set_boxes(self.current_boxes)
+                self.image_label.boxes_visible = True
+                self.image_label.current_scale = self.current_zoom
+                self.image_label._update_scaled_boxes()
+                self.image_label.update()  # Force a repaint
+                self.statusBar().showMessage(f"Loaded folder: {current_folder} | Image: ski_map_original.png | Boxes: {len(self.current_boxes)}")
+            else:
+                self.statusBar().showMessage(f"Loaded folder: {current_folder} | Image: ski_map_original.png")
+            
+            # Enable/disable view toggle based on whether redacted image exists
+            self.view_toggle_btn.setEnabled(os.path.exists(self.redacted_image_path))
+        else:
+            self.image_label.setText(f"Image not found: {self.original_image_path}")
+            self.statusBar().showMessage(f"Error: Image not found in {current_folder}")
+            self.view_toggle_btn.setEnabled(False)
     
     def display_image(self, image_path=None, pixmap=None):
         """Display the image in the GUI with high quality"""
@@ -384,6 +568,10 @@ class SkiMapProcessor(QMainWindow):
                 self.current_image_path = image_path
                 self.current_zoom = 1.0  # Reset zoom when loading a new image
                 
+                # Store original dimensions for proper scaling
+                self.original_width = self.original_pixmap.width()
+                self.original_height = self.original_pixmap.height()
+                
                 # Get the available size for the image
                 viewport_width = self.image_scroll.viewport().width()
                 viewport_height = self.image_scroll.viewport().height()
@@ -397,9 +585,32 @@ class SkiMapProcessor(QMainWindow):
                         Qt.KeepAspectRatio,  # Maintain aspect ratio
                         Qt.SmoothTransformation  # High-quality scaling
                     )
+                    
+                    # Calculate the actual zoom level based on the scaling
+                    if img_width > img_height:
+                        self.current_zoom = display_pixmap.width() / self.original_width
+                    else:
+                        self.current_zoom = display_pixmap.height() / self.original_height
                 else:
                     # Use original size for small images
                     display_pixmap = self.original_pixmap
+                    self.current_zoom = 1.0
+                
+                # Update zoom indicator
+                self.zoom_reset_btn.setText(f"{int(self.current_zoom * 100)}%")
+                
+                # If viewing redacted image, disable drawing controls
+                if image_path.endswith("ski_map_redacted.png"):
+                    self.draw_mode_checkbox.setEnabled(False)
+                    self.undo_box_btn.setEnabled(False)
+                    self.clear_boxes_btn.setEnabled(False)
+                    # Note: We don't modify boxes_visible here, that's handled in toggle_view
+                    self.image_label.drawing_enabled = False
+                else:
+                    self.draw_mode_checkbox.setEnabled(True)
+                    self.undo_box_btn.setEnabled(True)
+                    self.clear_boxes_btn.setEnabled(True)
+                    # Note: We don't modify boxes_visible here, that's handled in toggle_view
             elif pixmap:
                 # Use the provided pixmap (for zoom operations)
                 display_pixmap = pixmap
@@ -411,6 +622,9 @@ class SkiMapProcessor(QMainWindow):
             # Set the pixmap to the label
             self.image_label.setPixmap(display_pixmap)
             
+            # Store the current display scale for box scaling
+            self.image_label.current_scale = self.current_zoom
+            
             # Resize the container to match the image size for proper scrolling
             self.image_label.setMinimumSize(display_pixmap.width(), display_pixmap.height())
             
@@ -418,14 +632,16 @@ class SkiMapProcessor(QMainWindow):
             if hasattr(self, 'original_pixmap'):
                 orig_width = self.original_pixmap.width()
                 orig_height = self.original_pixmap.height()
-                self.statusBar().showMessage(f"Image dimensions: {orig_width}x{orig_height} pixels | Zoom: {int(self.current_zoom * 100)}%")
+                display_width = display_pixmap.width()
+                display_height = display_pixmap.height()
+                self.statusBar().showMessage(f"Image dimensions: {orig_width}x{orig_height} pixels | Display: {display_width}x{display_height} | Zoom: {int(self.current_zoom * 100)}%")
             
         except Exception as e:
             self.image_label.setText(f"Error displaying image: {e}")
             self.statusBar().showMessage(f"Error: {e}")
     
     def save_metadata(self):
-        """Save the metadata to a JSON file"""
+        """Save the metadata to a JSON file and create redacted image"""
         if not self.folders:
             return
         
@@ -439,15 +655,68 @@ class SkiMapProcessor(QMainWindow):
         region = self.region_input.text() if self.region_combo.currentText() == "Other" else self.region_combo.currentText()
         company = self.company_input.text() if self.company_combo.currentText() == "Other" else self.company_combo.currentText()
         
+        # Get boxes from image label
+        boxes = self.image_label.get_boxes()
+        
+        # Store the current boxes for later use
+        self.current_boxes = boxes
+        
         metadata = {
             "name": name,
             "country": country,
             "region": region,
-            "parent_company": company
+            "parent_company": company,
+            "boxes": boxes
         }
         
+        # Save metadata
         with open(metadata_path, 'w') as f:
             json.dump(metadata, f, indent=4)
+        
+        # Create redacted image if we have boxes and an original image
+        original_image_path = os.path.join(folder_path, "ski_map_original.png")
+        redacted_image_path = os.path.join(folder_path, "ski_map_redacted.png")
+        
+        if boxes and os.path.exists(original_image_path):
+            try:
+                # Open the original image with PIL
+                pil_img = Image.open(original_image_path)
+                
+                # Create a drawing context
+                draw = ImageDraw.Draw(pil_img)
+                
+                # Draw filled rectangles for each box
+                for box in boxes:
+                    x, y, width, height = box
+                    # Ensure coordinates are within image bounds
+                    x = max(0, min(x, pil_img.width - 1))
+                    y = max(0, min(y, pil_img.height - 1))
+                    # Ensure width and height don't exceed image bounds
+                    width = min(width, pil_img.width - x)
+                    height = min(height, pil_img.height - y)
+                    # Draw the rectangle
+                    draw.rectangle([x, y, x + width, y + height], fill=(0, 0, 0))
+                
+                # Save the redacted image
+                pil_img.save(redacted_image_path)
+                
+                # Enable the view toggle button
+                self.view_toggle_btn.setEnabled(True)
+                
+                self.statusBar().showMessage(f"Metadata and redacted image saved for {current_folder}")
+            except Exception as e:
+                self.statusBar().showMessage(f"Error creating redacted image: {e}")
+                print(f"Error creating redacted image: {e}")
+        else:
+            # If no boxes, remove any existing redacted image
+            if os.path.exists(redacted_image_path):
+                try:
+                    os.remove(redacted_image_path)
+                    self.view_toggle_btn.setEnabled(False)
+                except Exception as e:
+                    print(f"Error removing redacted image: {e}")
+            
+            self.statusBar().showMessage(f"Metadata saved for {current_folder}")
         
         print(f"Metadata saved for {current_folder}")
         
@@ -505,12 +774,19 @@ class SkiMapProcessor(QMainWindow):
             
         self.current_zoom = max(0.1, self.current_zoom - self.zoom_step)
         scaled_pixmap = self.original_pixmap.scaled(
-            int(self.original_pixmap.width() * self.current_zoom),
-            int(self.original_pixmap.height() * self.current_zoom),
+            int(self.original_width * self.current_zoom),
+            int(self.original_height * self.current_zoom),
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation
         )
+        
+        # Update the display
         self.display_image(pixmap=scaled_pixmap)
+        
+        # Update the boxes with the new scale
+        self.image_label.current_scale = self.current_zoom
+        self.image_label._update_scaled_boxes()
+        self.image_label.update()
     
     def zoom_reset(self):
         """Reset the image to original size"""
@@ -518,7 +794,14 @@ class SkiMapProcessor(QMainWindow):
             return
             
         self.current_zoom = 1.0
+        
+        # Update the display
         self.display_image(pixmap=self.original_pixmap)
+        
+        # Update the boxes with the new scale
+        self.image_label.current_scale = self.current_zoom
+        self.image_label._update_scaled_boxes()
+        self.image_label.update()
     
     def zoom_in(self):
         """Zoom in the image"""
@@ -531,12 +814,19 @@ class SkiMapProcessor(QMainWindow):
             
         self.current_zoom = min(5.0, self.current_zoom + self.zoom_step)
         scaled_pixmap = self.original_pixmap.scaled(
-            int(self.original_pixmap.width() * self.current_zoom),
-            int(self.original_pixmap.height() * self.current_zoom),
+            int(self.original_width * self.current_zoom),
+            int(self.original_height * self.current_zoom),
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation
         )
+        
+        # Update the display
         self.display_image(pixmap=scaled_pixmap)
+        
+        # Update the boxes with the new scale
+        self.image_label.current_scale = self.current_zoom
+        self.image_label._update_scaled_boxes()
+        self.image_label.update()
 
     def wheel_event(self, event):
         """Handle wheel events for zooming"""
@@ -552,6 +842,48 @@ class SkiMapProcessor(QMainWindow):
         else:
             # Normal scrolling behavior
             QScrollArea.wheelEvent(self.image_scroll, event)
+
+    def toggle_draw_mode(self, checked):
+        """Toggle drawing mode"""
+        self.image_label.enable_drawing(checked)
+    
+    def remove_last_box(self):
+        """Remove the last drawn box"""
+        self.image_label.remove_last_box()
+    
+    def clear_boxes(self):
+        """Clear all drawn boxes"""
+        self.image_label.clear_boxes()
+
+    def toggle_view(self, checked):
+        """Toggle between viewing the original and redacted image"""
+        if not hasattr(self, 'original_image_path') or not hasattr(self, 'redacted_image_path'):
+            return
+            
+        if checked:
+            # Show redacted image if it exists
+            if os.path.exists(self.redacted_image_path):
+                # Hide boxes before switching to redacted image
+                self.image_label.boxes_visible = False
+                self.display_image(image_path=self.redacted_image_path)
+                self.view_toggle_btn.setText("View Original")
+                self.statusBar().showMessage(f"Viewing redacted image")
+            else:
+                self.view_toggle_btn.setChecked(False)
+                self.statusBar().showMessage(f"Redacted image not found")
+        else:
+            # Show original image
+            # First load the image
+            self.display_image(image_path=self.original_image_path)
+            
+            # Then make boxes visible again and update them with the current scale
+            self.image_label.boxes_visible = True
+            self.image_label.current_scale = self.current_zoom
+            self.image_label._update_scaled_boxes()
+            self.image_label.update()  # Force a repaint to show the boxes
+            
+            self.view_toggle_btn.setText("View Redacted")
+            self.statusBar().showMessage(f"Viewing original image")
 
 def main():
     app = QApplication(sys.argv)
