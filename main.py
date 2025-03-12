@@ -404,6 +404,9 @@ class SkiMapProcessor(QMainWindow):
         else:
             # Load the first folder
             self.load_current_folder()
+            
+            # Create or update the index.json file
+            self.update_index_json()
     
     def collect_unique_metadata_values(self):
         """Collect unique values for each metadata field from all metadata.json files"""
@@ -509,8 +512,18 @@ class SkiMapProcessor(QMainWindow):
         if not os.path.exists(self.files_dir):
             return []
         
-        return [f for f in os.listdir(self.files_dir) 
+        current_folders = [f for f in os.listdir(self.files_dir) 
                 if os.path.isdir(os.path.join(self.files_dir, f))]
+        
+        # Check if the list of folders has changed
+        if hasattr(self, 'folders') and set(current_folders) != set(self.folders):
+            # Update the folders attribute
+            self.folders = current_folders
+            # Update the index.json file
+            self.update_index_json()
+            return current_folders
+        
+        return current_folders
     
     def load_current_folder(self):
         """Load the current folder's image and metadata"""
@@ -812,6 +825,34 @@ class SkiMapProcessor(QMainWindow):
             self.unique_values["parent_company"].append(company)
             self.unique_values["parent_company"].sort()
             self.update_combo_items(self.company_combo, self.unique_values["parent_company"])
+            
+        # Update the index.json file
+        self.update_index_json()
+    
+    def update_index_json(self):
+        """Create or update the index.json file with a list of all ski resort folders"""
+        index_path = os.path.join(self.files_dir, "index.json")
+        
+        # Create the index data structure
+        ski_resorts = []
+        
+        # Add each folder to the list
+        for folder in self.folders:
+            ski_resorts.append({"folderName": folder})
+        
+        # Create the index object
+        index_data = {
+            "skiResorts": ski_resorts
+        }
+        
+        # Save the index file
+        try:
+            with open(index_path, 'w') as f:
+                json.dump(index_data, f, indent=4)
+            print(f"Index file updated at {index_path}")
+        except Exception as e:
+            print(f"Error updating index file: {e}")
+            self.statusBar().showMessage(f"Error updating index file: {e}")
     
     def update_combo_items(self, combo, items):
         """Update combo box items while preserving current selection"""

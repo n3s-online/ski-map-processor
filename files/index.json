@@ -1,0 +1,31 @@
+{
+    "skiResorts": [
+        {
+            "folderName": "chamonix"
+        },
+        {
+            "folderName": "zermatt"
+        },
+        {
+            "folderName": "powderhorn"
+        },
+        {
+            "folderName": "whistler"
+        },
+        {
+            "folderName": "stevens-pass"
+        },
+        {
+            "folderName": "beaver-creek"
+        },
+        {
+            "folderName": "niseko"
+        },
+        {
+            "folderName": "breckenridge"
+        },
+        {
+            "folderName": "snoqualmie-summit-central"
+        }
+    ]
+}
