@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                             QHBoxLayout, QLabel, QLineEdit, QPushButton, 
                             QFrame, QScrollArea, QComboBox, QSizePolicy, QShortcut,
                             QCheckBox, QColorDialog, QMessageBox)
-from PyQt5.QtGui import QPixmap, QImage, QKeySequence, QPainter, QColor, QPen, QBrush
+from PyQt5.QtGui import QPixmap, QImage, QKeySequence, QPainter, QColor, QPen, QBrush, QIntValidator
 from PyQt5.QtCore import Qt, QRect, QPoint
 from PIL import Image, ImageDraw
 import shutil
@@ -370,6 +370,31 @@ class SkiMapProcessor(QMainWindow):
         self.company_input.setVisible(False)
         form_layout.addWidget(self.company_input)
         
+        # Continent
+        form_layout.addWidget(QLabel("Continent:"))
+        self.continent_combo = QComboBox()
+        self.continent_combo.setEditable(True)
+        self.continent_combo.addItems([""] + self.unique_values.get("continent", []) + ["Other"])
+        self.continent_combo.currentTextChanged.connect(self.on_continent_changed)
+        form_layout.addWidget(self.continent_combo)
+        self.continent_input = QLineEdit()
+        self.continent_input.setVisible(False)
+        form_layout.addWidget(self.continent_input)
+        
+        # Skiable Acreage
+        form_layout.addWidget(QLabel("Skiable Acreage:"))
+        self.acreage_input = QLineEdit()
+        # Only allow numbers
+        self.acreage_input.setValidator(QIntValidator(0, 999999))
+        form_layout.addWidget(self.acreage_input)
+        
+        # Number of Lifts
+        form_layout.addWidget(QLabel("Number of Lifts:"))
+        self.lifts_input = QLineEdit()
+        # Only allow numbers
+        self.lifts_input.setValidator(QIntValidator(0, 999))
+        form_layout.addWidget(self.lifts_input)
+        
         # Add some spacing
         form_layout.addSpacing(20)
         
@@ -414,7 +439,8 @@ class SkiMapProcessor(QMainWindow):
             "name": set(),
             "country": set(),
             "region": set(),
-            "parent_company": set()
+            "parent_company": set(),
+            "continent": set()  # Add continent to unique values
         }
         
         for folder in self.folders:
@@ -433,6 +459,8 @@ class SkiMapProcessor(QMainWindow):
                         unique_values["region"].add(metadata["region"])
                     if metadata.get("parent_company"):
                         unique_values["parent_company"].add(metadata["parent_company"])
+                    if metadata.get("continent"):
+                        unique_values["continent"].add(metadata["continent"])
                 except Exception as e:
                     print(f"Error reading metadata from {metadata_path}: {e}")
         
@@ -494,6 +522,12 @@ class SkiMapProcessor(QMainWindow):
         if text == "Other":
             self.company_input.setFocus()
     
+    def on_continent_changed(self, text):
+        """Handle continent dropdown change"""
+        self.continent_input.setVisible(text == "Other")
+        if text == "Other":
+            self.continent_input.setFocus()
+    
     def disable_controls(self):
         """Disable all controls when no folders are found"""
         self.name_input.setEnabled(False)
@@ -503,6 +537,10 @@ class SkiMapProcessor(QMainWindow):
         self.region_input.setEnabled(False)
         self.company_combo.setEnabled(False)
         self.company_input.setEnabled(False)
+        self.continent_combo.setEnabled(False)
+        self.continent_input.setEnabled(False)
+        self.acreage_input.setEnabled(False)
+        self.lifts_input.setEnabled(False)
         self.save_button.setEnabled(False)
         self.prev_button.setEnabled(False)
         self.next_button.setEnabled(False)
@@ -586,7 +624,21 @@ class SkiMapProcessor(QMainWindow):
                 self.company_combo.setCurrentText("Other")
                 self.company_input.setText(company)
                 self.company_input.setVisible(True)
-                
+            
+            # Set continent
+            continent = metadata.get("continent", "")
+            if continent in self.unique_values["continent"]:
+                self.continent_combo.setCurrentText(continent)
+                self.continent_input.setVisible(False)
+            else:
+                self.continent_combo.setCurrentText("Other")
+                self.continent_input.setText(continent)
+                self.continent_input.setVisible(True)
+            
+            # Set numeric fields
+            self.acreage_input.setText(str(metadata.get("skiable_acreage", "")))
+            self.lifts_input.setText(str(metadata.get("lifts", "")))
+            
             # Load redaction boxes if they exist
             if "boxes" in metadata and isinstance(metadata["boxes"], list):
                 # Store boxes for later use
@@ -605,6 +657,11 @@ class SkiMapProcessor(QMainWindow):
             self.company_combo.setCurrentText("")
             self.company_input.setText("")
             self.company_input.setVisible(False)
+            self.continent_combo.setCurrentText("")
+            self.continent_input.setText("")
+            self.continent_input.setVisible(False)
+            self.acreage_input.setText("")
+            self.lifts_input.setText("")
             self.current_boxes = []
         
         # Now load the image
@@ -740,6 +797,18 @@ class SkiMapProcessor(QMainWindow):
         country = self.country_input.text() if self.country_combo.currentText() == "Other" else self.country_combo.currentText()
         region = self.region_input.text() if self.region_combo.currentText() == "Other" else self.region_combo.currentText()
         company = self.company_input.text() if self.company_combo.currentText() == "Other" else self.company_combo.currentText()
+        continent = self.continent_input.text() if self.continent_combo.currentText() == "Other" else self.continent_combo.currentText()
+        
+        # Get numeric values, defaulting to empty string if invalid
+        try:
+            acreage = int(self.acreage_input.text()) if self.acreage_input.text() else ""
+        except ValueError:
+            acreage = ""
+        
+        try:
+            lifts = int(self.lifts_input.text()) if self.lifts_input.text() else ""
+        except ValueError:
+            lifts = ""
         
         # Get boxes from image label
         boxes = self.image_label.get_boxes()
@@ -752,6 +821,9 @@ class SkiMapProcessor(QMainWindow):
             "country": country,
             "region": region,
             "parent_company": company,
+            "continent": continent,
+            "skiable_acreage": acreage,
+            "lifts": lifts,
             "boxes": boxes
         }
         
@@ -826,19 +898,41 @@ class SkiMapProcessor(QMainWindow):
             self.unique_values["parent_company"].sort()
             self.update_combo_items(self.company_combo, self.unique_values["parent_company"])
             
+        if continent and continent not in self.unique_values["continent"] and continent != "Other":
+            self.unique_values["continent"].append(continent)
+            self.unique_values["continent"].sort()
+            self.update_combo_items(self.continent_combo, self.unique_values["continent"])
+            
         # Update the index.json file
         self.update_index_json()
     
     def update_index_json(self):
-        """Create or update the index.json file with a list of all ski resort folders"""
+        """Create or update the index.json file with a list of all ski resort folders and their names"""
         index_path = os.path.join(self.files_dir, "index.json")
         
         # Create the index data structure
         ski_resorts = []
         
-        # Add each folder to the list
+        # Add each folder to the list with only the name
         for folder in self.folders:
-            ski_resorts.append({"folderName": folder})
+            folder_path = os.path.join(self.files_dir, folder)
+            metadata_path = os.path.join(folder_path, "metadata.json")
+            
+            resort_data = {"folderName": folder}
+            
+            # Add only the name if metadata exists
+            if os.path.exists(metadata_path):
+                try:
+                    with open(metadata_path, 'r') as f:
+                        metadata = json.load(f)
+                    
+                    # Add only the name to the index
+                    if metadata.get("name"):
+                        resort_data["name"] = metadata["name"]
+                except Exception as e:
+                    print(f"Error reading metadata from {metadata_path}: {e}")
+            
+            ski_resorts.append(resort_data)
         
         # Create the index object
         index_data = {
