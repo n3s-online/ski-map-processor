@@ -1,0 +1,41 @@
+{
+    "name": "Val d\u2019Isere-Tignes",
+    "country": "France",
+    "region": "Haute-Savoie",
+    "parent_company": "Independent",
+    "continent": "Europe",
+    "skiable_acreage": 24000,
+    "lifts": 75,
+    "boxes": [
+        [
+            511,
+            19,
+            174,
+            34
+        ],
+        [
+            360,
+            409,
+            137,
+            25
+        ],
+        [
+            8,
+            364,
+            315,
+            37
+        ],
+        [
+            774,
+            9,
+            42,
+            43
+        ],
+        [
+            370,
+            9,
+            61,
+            47
+        ]
+    ]
+}

@@ -1,0 +1,35 @@
+{
+    "name": "Park City",
+    "country": "USA",
+    "region": "Utah",
+    "parent_company": "Vail",
+    "continent": "North America",
+    "skiable_acreage": 7300,
+    "lifts": 40,
+    "boxes": [
+        [
+            969,
+            639,
+            107,
+            14
+        ],
+        [
+            115,
+            472,
+            65,
+            24
+        ],
+        [
+            21,
+            457,
+            45,
+            20
+        ],
+        [
+            705,
+            449,
+            65,
+            24
+        ]
+    ]
+}

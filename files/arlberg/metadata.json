@@ -1,0 +1,23 @@
+{
+    "name": "Arlberg",
+    "country": "Austria",
+    "region": "Tyrol",
+    "parent_company": "Independent",
+    "continent": "Europe",
+    "skiable_acreage": 12350,
+    "lifts": 88,
+    "boxes": [
+        [
+            609,
+            14,
+            150,
+            63
+        ],
+        [
+            263,
+            616,
+            95,
+            93
+        ]
+    ]
+}

@@ -1,0 +1,41 @@
+{
+    "name": "Les 4 Vall\u00e9es",
+    "country": "Switzerland",
+    "region": "Canton",
+    "parent_company": "Independent",
+    "continent": "Europe",
+    "skiable_acreage": 86000,
+    "lifts": 93,
+    "boxes": [
+        [
+            40,
+            67,
+            140,
+            30
+        ],
+        [
+            1052,
+            22,
+            115,
+            23
+        ],
+        [
+            1039,
+            541,
+            154,
+            174
+        ],
+        [
+            517,
+            590,
+            171,
+            22
+        ],
+        [
+            353,
+            593,
+            64,
+            23
+        ]
+    ]
+}

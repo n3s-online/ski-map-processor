@@ -13,8 +13,24 @@
             "name": "Powderhorn"
         },
         {
+            "folderName": "via-lattea",
+            "name": "Via Lattea (Milky Way)"
+        },
+        {
             "folderName": "whistler",
             "name": "Whistler"
+        },
+        {
+            "folderName": "les-4-vallees",
+            "name": "Les 4 Vall\u00e9es"
+        },
+        {
+            "folderName": "tignes",
+            "name": "Val d\u2019Isere-Tignes"
+        },
+        {
+            "folderName": "park-city",
+            "name": "Park City"
         },
         {
             "folderName": "stevens-pass",
@@ -33,8 +49,16 @@
             "name": "Breckenridge"
         },
         {
+            "folderName": "paradiski",
+            "name": "La Plagne Paradiski"
+        },
+        {
             "folderName": "snoqualmie-summit-central",
             "name": "Snoqualmie (Central)"
+        },
+        {
+            "folderName": "arlberg",
+            "name": "Arlberg"
         }
     ]
 }

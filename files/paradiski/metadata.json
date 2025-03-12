@@ -1,0 +1,29 @@
+{
+    "name": "La Plagne Paradiski",
+    "country": "France",
+    "region": "Haute-Savoie",
+    "parent_company": "Independent",
+    "continent": "Europe",
+    "skiable_acreage": 35559,
+    "lifts": 164,
+    "boxes": [
+        [
+            433,
+            7,
+            190,
+            171
+        ],
+        [
+            465,
+            586,
+            85,
+            13
+        ],
+        [
+            673,
+            388,
+            56,
+            12
+        ]
+    ]
+}
