@@ -3,6 +3,9 @@
     "country": "Japan",
     "region": "Hokkaido",
     "parent_company": "Independent",
+    "continent": "Asia",
+    "skiable_acreage": 2191,
+    "lifts": 38,
     "boxes": [
         [
             29,

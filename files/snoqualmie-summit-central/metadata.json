@@ -3,6 +3,9 @@
     "country": "USA",
     "region": "Washington",
     "parent_company": "Alterra",
+    "continent": "North America",
+    "skiable_acreage": 1994,
+    "lifts": 9,
     "boxes": [
         [
             327,

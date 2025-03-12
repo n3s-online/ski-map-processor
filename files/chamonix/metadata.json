@@ -3,6 +3,9 @@
     "country": "France",
     "region": "Haute-Savoie",
     "parent_company": "Independent",
+    "continent": "Europe",
+    "skiable_acreage": 30000,
+    "lifts": 65,
     "boxes": [
         [
             615,

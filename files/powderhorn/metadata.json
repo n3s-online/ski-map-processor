@@ -3,6 +3,9 @@
     "country": "USA",
     "region": "Colorado",
     "parent_company": "Independent",
+    "continent": "North America",
+    "skiable_acreage": 1600,
+    "lifts": 3,
     "boxes": [
         [
             65,

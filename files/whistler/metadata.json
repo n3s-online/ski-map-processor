@@ -3,6 +3,9 @@
     "country": "Canada",
     "region": "British Columbia",
     "parent_company": "Vail",
+    "continent": "North America",
+    "skiable_acreage": 8171,
+    "lifts": 37,
     "boxes": [
         [
             44,

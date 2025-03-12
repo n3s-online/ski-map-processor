@@ -3,6 +3,9 @@
     "country": "USA",
     "region": "Colorado",
     "parent_company": "Vail",
+    "continent": "North America",
+    "skiable_acreage": 2082,
+    "lifts": 25,
     "boxes": [
         [
             40,

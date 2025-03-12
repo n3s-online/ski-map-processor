@@ -3,6 +3,9 @@
     "country": "Switzerland",
     "region": "Valais",
     "parent_company": "Independent",
+    "continent": "Europe",
+    "skiable_acreage": 79533,
+    "lifts": 54,
     "boxes": [
         [
             64,
