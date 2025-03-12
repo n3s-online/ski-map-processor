@@ -1,0 +1,20 @@
+{
+    "name": "Breckenridge",
+    "country": "USA",
+    "region": "Colorado",
+    "parent_company": "Vail",
+    "boxes": [
+        [
+            5,
+            2,
+            143,
+            61
+        ],
+        [
+            11,
+            768,
+            307,
+            20
+        ]
+    ]
+}

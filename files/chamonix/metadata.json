@@ -1,0 +1,26 @@
+{
+    "name": "Chamonix",
+    "country": "France",
+    "region": "Haute-Savoie",
+    "parent_company": "Independent",
+    "boxes": [
+        [
+            615,
+            16,
+            184,
+            100
+        ],
+        [
+            208,
+            562,
+            86,
+            35
+        ],
+        [
+            573,
+            653,
+            87,
+            41
+        ]
+    ]
+}

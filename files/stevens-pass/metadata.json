@@ -1,0 +1,14 @@
+{
+    "name": "Stevens Pass",
+    "country": "USA",
+    "region": "Washington",
+    "parent_company": "Vail",
+    "boxes": [
+        [
+            5,
+            407,
+            1185,
+            354
+        ]
+    ]
+}
