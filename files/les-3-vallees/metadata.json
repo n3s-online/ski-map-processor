@@ -1,0 +1,19 @@
+{
+    "name": "Les 3 Vall\u00e9es",
+    "country": "France",
+    "region": "Auvergne-Rh\u00f4ne-Alpes",
+    "parent_company": "Independent",
+    "continent": "Europe",
+    "skiable_acreage": 25916,
+    "lifts": 156,
+    "latitude": 45.34168372529327,
+    "longitude": 6.586402286743053,
+    "boxes": [
+        [
+            348,
+            0,
+            328,
+            100
+        ]
+    ]
+}

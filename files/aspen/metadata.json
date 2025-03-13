@@ -1,0 +1,49 @@
+{
+    "name": "Aspen Snowmass",
+    "country": "USA",
+    "region": "Colorado",
+    "parent_company": "Alterra",
+    "continent": "North America",
+    "skiable_acreage": 5527,
+    "lifts": 39,
+    "latitude": 39.18952220758236,
+    "longitude": -106.94975685264733,
+    "boxes": [
+        [
+            22,
+            10,
+            465,
+            83
+        ],
+        [
+            348,
+            362,
+            93,
+            31
+        ],
+        [
+            984,
+            1025,
+            168,
+            75
+        ],
+        [
+            565,
+            1569,
+            127,
+            25
+        ],
+        [
+            51,
+            1267,
+            204,
+            28
+        ],
+        [
+            282,
+            1554,
+            82,
+            37
+        ]
+    ]
+}

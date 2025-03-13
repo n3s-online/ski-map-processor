@@ -1,0 +1,19 @@
+{
+    "name": "Hakuba Valley",
+    "country": "Japan",
+    "region": "Nagano",
+    "parent_company": "Independent",
+    "continent": "Asia",
+    "skiable_acreage": 2400,
+    "lifts": 135,
+    "latitude": 36.70487045564589,
+    "longitude": 137.85536001610126,
+    "boxes": [
+        [
+            6,
+            10,
+            474,
+            47
+        ]
+    ]
+}

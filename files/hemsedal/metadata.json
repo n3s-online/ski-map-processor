@@ -1,0 +1,31 @@
+{
+    "name": "Hemsedal Skisenter",
+    "country": "Norway",
+    "region": "Viken",
+    "parent_company": "SkiStar",
+    "continent": "Europe",
+    "skiable_acreage": 415,
+    "lifts": 20,
+    "latitude": 60.8601917429121,
+    "longitude": 8.516877918998217,
+    "boxes": [
+        [
+            927,
+            9,
+            154,
+            29
+        ],
+        [
+            94,
+            624,
+            131,
+            19
+        ],
+        [
+            786,
+            601,
+            100,
+            22
+        ]
+    ]
+}

@@ -1,0 +1,25 @@
+{
+    "name": "Hafjell Alpinsenter",
+    "country": "Norway",
+    "region": "Innlandet",
+    "parent_company": "Independent",
+    "continent": "Europe",
+    "skiable_acreage": 5992,
+    "lifts": 19,
+    "latitude": 61.23470393845353,
+    "longitude": 10.448228628800548,
+    "boxes": [
+        [
+            35,
+            36,
+            133,
+            60
+        ],
+        [
+            539,
+            101,
+            80,
+            18
+        ]
+    ]
+}

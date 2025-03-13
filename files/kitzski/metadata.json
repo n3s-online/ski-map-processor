@@ -1,0 +1,25 @@
+{
+    "name": "Bergbahn Kitzb\u00fchel (KitzSki)",
+    "country": "Austria",
+    "region": "Tyrol",
+    "parent_company": "Independent",
+    "continent": "Europe",
+    "skiable_acreage": 56800,
+    "lifts": 58,
+    "latitude": 47.44920467310924,
+    "longitude": 12.391514243332056,
+    "boxes": [
+        [
+            831,
+            7,
+            117,
+            40
+        ],
+        [
+            411,
+            456,
+            62,
+            20
+        ]
+    ]
+}

@@ -1,0 +1,19 @@
+{
+    "name": "Nevados de Chill\u00e1n",
+    "country": "Chile",
+    "region": "\u00d1uble",
+    "parent_company": "Independent",
+    "continent": "South America",
+    "skiable_acreage": 1350,
+    "lifts": 14,
+    "latitude": -36.84534405982397,
+    "longitude": -71.39878851518345,
+    "boxes": [
+        [
+            835,
+            12,
+            198,
+            93
+        ]
+    ]
+}

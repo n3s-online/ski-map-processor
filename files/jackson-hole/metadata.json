@@ -1,0 +1,12 @@
+{
+    "name": "Jackson Hole",
+    "country": "USA",
+    "region": "Wyoming",
+    "parent_company": "Independent",
+    "continent": "North America",
+    "skiable_acreage": 2500,
+    "lifts": 13,
+    "latitude": 43.613730787089,
+    "longitude": 110.70354140277004,
+    "boxes": []
+}

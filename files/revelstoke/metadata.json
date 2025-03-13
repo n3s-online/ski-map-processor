@@ -1,0 +1,19 @@
+{
+    "name": "Revelstoke Mountain Resort",
+    "country": "Canada",
+    "region": "British Columbia",
+    "parent_company": "Independent",
+    "continent": "North America",
+    "skiable_acreage": 3121,
+    "lifts": 5,
+    "latitude": 50.95889538607809,
+    "longitude": -118.17542412135109,
+    "boxes": [
+        [
+            28,
+            78,
+            304,
+            68
+        ]
+    ]
+}

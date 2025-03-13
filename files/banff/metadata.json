@@ -1,0 +1,43 @@
+{
+    "name": "Banff Sunshine",
+    "country": "Canada",
+    "region": "Alberta",
+    "parent_company": "Independent",
+    "continent": "North America",
+    "skiable_acreage": 3358,
+    "lifts": 12,
+    "latitude": 51.07856867446648,
+    "longitude": -115.77667648896335,
+    "boxes": [
+        [
+            11,
+            147,
+            128,
+            33
+        ],
+        [
+            965,
+            174,
+            113,
+            18
+        ],
+        [
+            789,
+            652,
+            281,
+            95
+        ],
+        [
+            792,
+            790,
+            279,
+            26
+        ],
+        [
+            33,
+            655,
+            188,
+            31
+        ]
+    ]
+}

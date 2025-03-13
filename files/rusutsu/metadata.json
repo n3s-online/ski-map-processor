@@ -1,0 +1,19 @@
+{
+    "name": "Rusutsu",
+    "country": "Japan",
+    "region": "Hokkaido",
+    "parent_company": "Independent",
+    "continent": "Asia",
+    "skiable_acreage": 524,
+    "lifts": 18,
+    "latitude": 42.75177908543578,
+    "longitude": 140.89728625378604,
+    "boxes": [
+        [
+            960,
+            325,
+            64,
+            13
+        ]
+    ]
+}

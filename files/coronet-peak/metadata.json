@@ -1,0 +1,19 @@
+{
+    "name": "Coronet Peak",
+    "country": "New Zealand",
+    "region": "Otago",
+    "parent_company": "NZSki",
+    "continent": "Oceania",
+    "skiable_acreage": 700,
+    "lifts": 8,
+    "latitude": -44.94137880411738,
+    "longitude": 168.71145791808976,
+    "boxes": [
+        [
+            16,
+            15,
+            169,
+            57
+        ]
+    ]
+}

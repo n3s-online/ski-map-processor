@@ -1,0 +1,19 @@
+{
+    "name": "Trysil",
+    "country": "Norway",
+    "region": "Innlandet",
+    "parent_company": "SkiStar",
+    "continent": "Europe",
+    "skiable_acreage": 18600,
+    "lifts": 32,
+    "latitude": 61.324693154205235,
+    "longitude": 12.156072940529864,
+    "boxes": [
+        [
+            63,
+            0,
+            85,
+            45
+        ]
+    ]
+}

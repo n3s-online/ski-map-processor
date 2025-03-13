@@ -1,0 +1,37 @@
+{
+    "name": "Cortina d'Ampezzo",
+    "country": "Italy",
+    "region": "Veneto",
+    "parent_company": "Independent",
+    "continent": "Europe",
+    "skiable_acreage": 1223,
+    "lifts": 35,
+    "latitude": 46.53878254615072,
+    "longitude": 12.132869443689172,
+    "boxes": [
+        [
+            7,
+            3,
+            591,
+            86
+        ],
+        [
+            937,
+            10,
+            253,
+            76
+        ],
+        [
+            41,
+            142,
+            324,
+            20
+        ],
+        [
+            148,
+            786,
+            270,
+            70
+        ]
+    ]
+}

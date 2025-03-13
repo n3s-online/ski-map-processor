@@ -1,0 +1,19 @@
+{
+    "name": "Livigno",
+    "country": "Italy",
+    "region": "Lombardy",
+    "parent_company": "Independent",
+    "continent": "Europe",
+    "skiable_acreage": 2471,
+    "lifts": 32,
+    "latitude": 46.534454330840596,
+    "longitude": 10.135777986437525,
+    "boxes": [
+        [
+            601,
+            509,
+            52,
+            22
+        ]
+    ]
+}

@@ -1,0 +1,31 @@
+{
+    "name": "Vail",
+    "country": "USA",
+    "region": "Colorado",
+    "parent_company": "Vail",
+    "continent": "North America",
+    "skiable_acreage": 5289,
+    "lifts": 33,
+    "latitude": 39.63147577931031,
+    "longitude": -106.38211430122242,
+    "boxes": [
+        [
+            247,
+            640,
+            156,
+            25
+        ],
+        [
+            579,
+            526,
+            48,
+            26
+        ],
+        [
+            21,
+            331,
+            157,
+            45
+        ]
+    ]
+}

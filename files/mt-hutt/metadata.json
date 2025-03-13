@@ -1,0 +1,19 @@
+{
+    "name": "Mt. Hutt",
+    "country": "New Zealand",
+    "region": "Canterbury",
+    "parent_company": "NZSki",
+    "continent": "Oceania",
+    "skiable_acreage": 900,
+    "lifts": 5,
+    "latitude": -43.49561054115241,
+    "longitude": 171.53960725763946,
+    "boxes": [
+        [
+            161,
+            24,
+            199,
+            76
+        ]
+    ]
+}

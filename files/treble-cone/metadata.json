@@ -1,0 +1,19 @@
+{
+    "name": "Treble Cone",
+    "country": "New Zealand",
+    "region": "Otago",
+    "parent_company": "Independent",
+    "continent": "Oceania",
+    "skiable_acreage": 1359,
+    "lifts": 3,
+    "latitude": -44.63744014239225,
+    "longitude": 168.9150712995098,
+    "boxes": [
+        [
+            21,
+            2,
+            106,
+            92
+        ]
+    ]
+}

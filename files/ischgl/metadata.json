@@ -1,0 +1,19 @@
+{
+    "name": "Ischgl Silvrettaseilbahn AG",
+    "country": "Austria",
+    "region": "Tyrol",
+    "parent_company": "Independent",
+    "continent": "Europe",
+    "skiable_acreage": 1272,
+    "lifts": 46,
+    "latitude": 47.010229559900004,
+    "longitude": 10.288616339099631,
+    "boxes": [
+        [
+            802,
+            762,
+            85,
+            32
+        ]
+    ]
+}
