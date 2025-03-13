@@ -1,0 +1,12 @@
+{
+    "name": "Sugar Bowl",
+    "country": "USA",
+    "region": "California",
+    "parent_company": "Independent",
+    "continent": "North America",
+    "skiable_acreage": 1650,
+    "lifts": 13,
+    "latitude": 39.301023500475495,
+    "longitude": -120.33450780704459,
+    "boxes": []
+}

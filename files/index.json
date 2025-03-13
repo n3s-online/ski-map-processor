@@ -1,6 +1,14 @@
 {
     "skiResorts": [
         {
+            "folderName": "alta",
+            "name": "Alta"
+        },
+        {
+            "folderName": "arapahoe-basin",
+            "name": "Arapahoe Basin"
+        },
+        {
             "folderName": "arlberg",
             "name": "Arlberg"
         },
@@ -111,6 +119,10 @@
         {
             "folderName": "stevens-pass",
             "name": "Stevens Pass"
+        },
+        {
+            "folderName": "sugar-bowl",
+            "name": "Sugar Bowl"
         },
         {
             "folderName": "treble-cone",

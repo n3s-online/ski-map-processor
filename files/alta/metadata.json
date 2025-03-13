@@ -1,0 +1,12 @@
+{
+    "name": "Alta",
+    "country": "USA",
+    "region": "Utah",
+    "parent_company": "Independent",
+    "continent": "North America",
+    "skiable_acreage": 2614,
+    "lifts": 8,
+    "latitude": 40.57768396657158,
+    "longitude": -111.62398246051809,
+    "boxes": []
+}
