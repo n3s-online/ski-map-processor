@@ -575,9 +575,32 @@ class SkiMapProcessor(QMainWindow):
             self.folders = current_folders
             # Update the index.json file
             self.update_index_json()
-            return current_folders
+            return self.sort_folders_by_name(current_folders)
         
-        return current_folders
+        return self.sort_folders_by_name(current_folders)
+    
+    def sort_folders_by_name(self, folders):
+        """Sort folders based on the resort names in their metadata files"""
+        # Create a dictionary to map folders to their resort names
+        folder_to_name = {}
+        
+        for folder in folders:
+            metadata_path = os.path.join(self.files_dir, folder, "metadata.json")
+            if os.path.exists(metadata_path):
+                try:
+                    with open(metadata_path, 'r') as f:
+                        metadata = json.load(f)
+                    
+                    # Use the resort name if available, otherwise use the folder name
+                    folder_to_name[folder] = metadata.get("name", folder).lower()
+                except Exception as e:
+                    print(f"Error reading metadata from {metadata_path}: {e}")
+                    folder_to_name[folder] = folder.lower()
+            else:
+                folder_to_name[folder] = folder.lower()
+        
+        # Sort folders based on their associated names
+        return sorted(folders, key=lambda folder: folder_to_name.get(folder, folder.lower()))
     
     def load_current_folder(self):
         """Load the current folder's image and metadata"""
@@ -968,6 +991,9 @@ class SkiMapProcessor(QMainWindow):
                     print(f"Error reading metadata from {metadata_path}: {e}")
             
             ski_resorts.append(resort_data)
+        
+        # Sort the ski resorts alphabetically by name
+        ski_resorts.sort(key=lambda x: x.get("name", "").lower() if x.get("name") else x.get("folderName", "").lower())
         
         # Create the index object
         index_data = {

@@ -1,16 +1,112 @@
 {
     "skiResorts": [
         {
+            "folderName": "arlberg",
+            "name": "Arlberg"
+        },
+        {
+            "folderName": "aspen"
+        },
+        {
+            "folderName": "banff"
+        },
+        {
+            "folderName": "beaver-creek",
+            "name": "Beaver Creek"
+        },
+        {
+            "folderName": "breckenridge",
+            "name": "Breckenridge"
+        },
+        {
             "folderName": "chamonix",
             "name": "Chamonix"
         },
         {
-            "folderName": "zermatt",
-            "name": "Zermatt"
+            "folderName": "coronet-peak"
+        },
+        {
+            "folderName": "cortina"
+        },
+        {
+            "folderName": "hafjell"
+        },
+        {
+            "folderName": "hakuba"
+        },
+        {
+            "folderName": "hemsedal"
+        },
+        {
+            "folderName": "ischgl"
+        },
+        {
+            "folderName": "jackson-hole"
+        },
+        {
+            "folderName": "kitzski"
+        },
+        {
+            "folderName": "paradiski",
+            "name": "La Plagne Paradiski"
+        },
+        {
+            "folderName": "les-4-vallees",
+            "name": "Les 4 Vall\u00e9es"
+        },
+        {
+            "folderName": "les-3-vallees"
+        },
+        {
+            "folderName": "livigno"
+        },
+        {
+            "folderName": "mt-hutt"
+        },
+        {
+            "folderName": "nevados"
+        },
+        {
+            "folderName": "niseko",
+            "name": "Niseko United"
+        },
+        {
+            "folderName": "park-city",
+            "name": "Park City"
+        },
+        {
+            "folderName": "portillo"
         },
         {
             "folderName": "powderhorn",
             "name": "Powderhorn"
+        },
+        {
+            "folderName": "revelstoke"
+        },
+        {
+            "folderName": "rusutsu"
+        },
+        {
+            "folderName": "snoqualmie-summit-central",
+            "name": "Snoqualmie (Central)"
+        },
+        {
+            "folderName": "stevens-pass",
+            "name": "Stevens Pass"
+        },
+        {
+            "folderName": "treble-cone"
+        },
+        {
+            "folderName": "trysil"
+        },
+        {
+            "folderName": "vail"
+        },
+        {
+            "folderName": "tignes",
+            "name": "Val d\u2019Isere-Tignes"
         },
         {
             "folderName": "via-lattea",
@@ -21,44 +117,8 @@
             "name": "Whistler"
         },
         {
-            "folderName": "les-4-vallees",
-            "name": "Les 4 Vall\u00e9es"
-        },
-        {
-            "folderName": "tignes",
-            "name": "Val d\u2019Isere-Tignes"
-        },
-        {
-            "folderName": "park-city",
-            "name": "Park City"
-        },
-        {
-            "folderName": "stevens-pass",
-            "name": "Stevens Pass"
-        },
-        {
-            "folderName": "beaver-creek",
-            "name": "Beaver Creek"
-        },
-        {
-            "folderName": "niseko",
-            "name": "Niseko United"
-        },
-        {
-            "folderName": "breckenridge",
-            "name": "Breckenridge"
-        },
-        {
-            "folderName": "paradiski",
-            "name": "La Plagne Paradiski"
-        },
-        {
-            "folderName": "snoqualmie-summit-central",
-            "name": "Snoqualmie (Central)"
-        },
-        {
-            "folderName": "arlberg",
-            "name": "Arlberg"
+            "folderName": "zermatt",
+            "name": "Zermatt"
         }
     ]
 }
