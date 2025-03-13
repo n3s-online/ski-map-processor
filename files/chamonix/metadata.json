@@ -6,6 +6,8 @@
     "continent": "Europe",
     "skiable_acreage": 30000,
     "lifts": 65,
+    "latitude": 45.922829188668324,
+    "longitude": 6.868881469686398,
     "boxes": [
         [
             615,

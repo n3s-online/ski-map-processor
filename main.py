@@ -395,6 +395,20 @@ class SkiMapProcessor(QMainWindow):
         self.lifts_input.setValidator(QIntValidator(0, 999))
         form_layout.addWidget(self.lifts_input)
         
+        # Latitude
+        form_layout.addWidget(QLabel("Latitude:"))
+        self.latitude_input = QLineEdit()
+        # Use a validator that allows decimal numbers
+        self.latitude_input.setPlaceholderText("e.g., 45.5017")
+        form_layout.addWidget(self.latitude_input)
+        
+        # Longitude
+        form_layout.addWidget(QLabel("Longitude:"))
+        self.longitude_input = QLineEdit()
+        # Use a validator that allows decimal numbers
+        self.longitude_input.setPlaceholderText("e.g., -73.5673")
+        form_layout.addWidget(self.longitude_input)
+        
         # Add some spacing
         form_layout.addSpacing(20)
         
@@ -541,6 +555,8 @@ class SkiMapProcessor(QMainWindow):
         self.continent_input.setEnabled(False)
         self.acreage_input.setEnabled(False)
         self.lifts_input.setEnabled(False)
+        self.latitude_input.setEnabled(False)
+        self.longitude_input.setEnabled(False)
         self.save_button.setEnabled(False)
         self.prev_button.setEnabled(False)
         self.next_button.setEnabled(False)
@@ -639,6 +655,10 @@ class SkiMapProcessor(QMainWindow):
             self.acreage_input.setText(str(metadata.get("skiable_acreage", "")))
             self.lifts_input.setText(str(metadata.get("lifts", "")))
             
+            # Set latitude and longitude
+            self.latitude_input.setText(str(metadata.get("latitude", "")))
+            self.longitude_input.setText(str(metadata.get("longitude", "")))
+            
             # Load redaction boxes if they exist
             if "boxes" in metadata and isinstance(metadata["boxes"], list):
                 # Store boxes for later use
@@ -662,6 +682,8 @@ class SkiMapProcessor(QMainWindow):
             self.continent_input.setVisible(False)
             self.acreage_input.setText("")
             self.lifts_input.setText("")
+            self.latitude_input.setText("")
+            self.longitude_input.setText("")
             self.current_boxes = []
         
         # Now load the image
@@ -809,6 +831,17 @@ class SkiMapProcessor(QMainWindow):
             lifts = int(self.lifts_input.text()) if self.lifts_input.text() else ""
         except ValueError:
             lifts = ""
+            
+        # Get latitude and longitude, defaulting to empty string if invalid
+        try:
+            latitude = float(self.latitude_input.text()) if self.latitude_input.text() else ""
+        except ValueError:
+            latitude = ""
+            
+        try:
+            longitude = float(self.longitude_input.text()) if self.longitude_input.text() else ""
+        except ValueError:
+            longitude = ""
         
         # Get boxes from image label
         boxes = self.image_label.get_boxes()
@@ -824,6 +857,8 @@ class SkiMapProcessor(QMainWindow):
             "continent": continent,
             "skiable_acreage": acreage,
             "lifts": lifts,
+            "latitude": latitude,
+            "longitude": longitude,
             "boxes": boxes
         }
         

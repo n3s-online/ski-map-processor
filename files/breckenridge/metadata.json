@@ -6,6 +6,8 @@
     "continent": "North America",
     "skiable_acreage": 2908,
     "lifts": 35,
+    "latitude": 39.47990329185218,
+    "longitude": -106.08558316745463,
     "boxes": [
         [
             5,
